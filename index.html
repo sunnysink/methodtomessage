@@ -1,0 +1,1689 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Method-to-Message Generator — Method Alchemy Challenge</title>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/react/18.2.0/umd/react.production.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/react-dom/18.2.0/umd/react-dom.production.min.js"></script>
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body { background: #D6D2C9; }
+</style>
+</head>
+<body>
+<div id="root"></div>
+<script>
+const {
+  useState,
+  useEffect,
+  useRef
+} = React;
+
+/* ═══════════════════════════════════════════
+   METHOD-TO-MESSAGE GENERATOR
+   Method Alchemy Challenge · Soul Forged Founders
+   ═══════════════════════════════════════════ */
+
+const TONES = [{
+  id: "grounded",
+  label: "Grounded",
+  icon: "◆"
+}, {
+  id: "fiery",
+  label: "Fiery",
+  icon: "🜂"
+}, {
+  id: "mystical",
+  label: "Mystical",
+  icon: "✦"
+}, {
+  id: "nurturing",
+  label: "Nurturing",
+  icon: "❋"
+}, {
+  id: "bold",
+  label: "Bold",
+  icon: "⬥"
+}, {
+  id: "poetic",
+  label: "Poetic",
+  icon: "✧"
+}, {
+  id: "other",
+  label: "Other",
+  icon: "○"
+}];
+const TONE_LANGUAGE = {
+  grounded: {
+    adj: "rooted",
+    verb: "anchors",
+    feel: "steady, clear, and held",
+    energy: "grounded clarity"
+  },
+  fiery: {
+    adj: "activated",
+    verb: "ignites",
+    feel: "lit up, alive, and unstoppable",
+    energy: "sacred fire"
+  },
+  mystical: {
+    adj: "initiated",
+    verb: "reveals",
+    feel: "seen in ways they can't explain",
+    energy: "deep knowing"
+  },
+  nurturing: {
+    adj: "held",
+    verb: "tends",
+    feel: "safe enough to finally let go",
+    energy: "tender strength"
+  },
+  bold: {
+    adj: "claimed",
+    verb: "commands",
+    feel: "ready to take up space unapologetically",
+    energy: "sovereign power"
+  },
+  poetic: {
+    adj: "witnessed",
+    verb: "weaves",
+    feel: "understood in the spaces between words",
+    energy: "sacred language"
+  }
+};
+const PROMPT_SECTIONS = [{
+  id: "foundation",
+  title: "Foundation",
+  subtitle: "Start here: name your method, then build your messaging from it",
+  prompts: [{
+    id: "methodname",
+    title: "Method Name Brainstorm",
+    category: "Start Here",
+    needsMethod: false,
+    generate: (d, t) => `I'm a practitioner who helps ${d.client}.
+
+My clients come to me in this state: ${d.before}
+
+After working with me, they experience: ${d.after}
+
+What my sessions feel like: ${d.experience}
+
+The core shift I create: ${d.shift}
+
+My energetic tone as a brand is: ${t.energy}
+
+Generate 15 potential names for my signature method. For each name:
+- It should feel ${t.adj} and match my brand energy
+- It should hint at the transformation without over-explaining
+- Avoid generic words like "journey," "pathway," "blueprint," or "framework"
+- Mix styles: some mythic/poetic, some grounded/clear, some unexpected/bold
+
+After the list, pick your top 3 and explain in one sentence each why they work for my specific method. Then give me 3 "name formulas" I can riff on myself (e.g. "The [Symbol] + [Action]" or "[Adjective] [Container]").`
+  }]
+}, {
+  id: "transformation",
+  title: "Transformation Messaging",
+  subtitle: "For the days you talk about what shifts inside your client",
+  prompts: [{
+    id: "whatdoyoudo",
+    title: '"What Do You Do?" Answer',
+    category: "Quick Win",
+    generate: (d, t) => `I help ${d.client} move from ${d.before} to ${d.after}. ${d.method ? `My method is called ${d.method}, and it works by` : "My approach works by"} ${d.experience}. The shift my clients walk away with? ${d.shift}.
+
+Now rewrite the paragraph above in a voice that feels ${t.adj} and ${t.feel}. Make it conversational enough for a networking event, specific enough that my ideal client would say "that's exactly what I need." Keep it under 4 sentences. Do not use the word "transformative."`
+  }, {
+    id: "beforeafter",
+    title: "Before/After Shift Statements",
+    category: "Quick Win",
+    generate: (d, t) => `My client's before-state: ${d.before}
+My client's after-state: ${d.after}
+The core shift I facilitate: ${d.shift}${d.method ? `\nMy method name: ${d.method || "[your method name]"}` : ""}
+My energetic tone: ${t.energy}
+
+Generate 5 before/after transformation statements I can use in content. Each one should follow this pattern:
+"Before [method name], they [before-state detail]. After, they [after-state detail]."
+
+Make each one feel ${t.adj}. Make the "after" side visceral and specific, not vague. These should make my ideal client (${d.client}) feel seen. Vary the sentence structure across all 5.`
+  }, {
+    id: "clientlanguage",
+    title: "Client-Language Transformation Statements",
+    category: "Quick Win",
+    generate: (d, t) => `My ideal client: ${d.client}
+What they experience before working with me: ${d.before}
+What they experience after: ${d.after}
+What my sessions feel like: ${d.experience}
+My tone: ${t.energy}
+
+Write 5 first-person statements my ideal client would say AFTER going through my method (${d.method || "my method"}). These should sound like real testimonials, written in the client's voice, not mine. 
+
+Example energy: "I used to [before]. Now I [after] and I didn't even realize that was possible."
+
+Make them feel ${t.adj}. Each one should be 1-2 sentences. No generic affirmations. These should be specific to the kind of shift I create.`
+  }]
+}, {
+  id: "visibility",
+  title: "Visibility Copy",
+  subtitle: "For the days you step out and let people see what you built",
+  prompts: [{
+    id: "bio",
+    title: "Short Bio Blurb",
+    category: "Quick Win",
+    generate: (d, t) => `My method: ${d.method || "[your method name]"}
+Who I help: ${d.client}
+The shift I create: moving from ${d.before} to ${d.after}
+What my sessions feel like: ${d.experience}
+My energetic tone: ${t.energy}
+
+Write 3 versions of a short bio using this exact 4-line framework. This is for an Instagram bio so the TOTAL must be under 150 characters including emojis and spaces. Count the characters for each version and confirm each is under 150.
+
+Framework:
+Line 1: Emoji + Who I help and how
+Line 2: Emoji + Credibility or proof (what gives me authority)
+Line 3: Emoji + What makes me different (my method name or unique angle)
+Line 4: Emoji + FREE [name of freebie, lead magnet, or session] 👇
+
+Rules:
+- Every line MUST start with an emoji (✦ 🔮 🌙 💫 🔥 ⚡ 🌿 ✨ 🔑 💎 or similar — match my tone)
+- Each line should be a clear, readable mini-statement that my ideal client would immediately understand. Not cryptic fragments. Not full sentences either. Think the way real Instagram bios read — conversational, scannable, and clear at a glance.
+- Example of TOO compressed (bad): "🔥 Spiritual coaches, clearly named" — this means nothing to a reader
+- Example of JUST RIGHT (good): "🔥 Helping spiritual coaches name their method" — clear, specific, scannable
+- Do NOT start any line with "I" — lead with the value, the client, or the method
+- The CTA line (Line 4) must name a specific free offer and end with 👇 to point to the link
+- Example CTA: "✨ FREE Sacred Vision Activation 👇" or "🔮 Free Tarot Clarity Session 👇"
+- The freebie/session name should sound like a real offer my ideal client would want, not a generic placeholder
+- Make each version feel ${t.adj}
+
+After writing all 3 versions, list the character count for each one. If any version exceeds 150 characters, rewrite it shorter.`
+  }, {
+    id: "session",
+    title: "Signature Session Description",
+    category: "Deeper Piece",
+    generate: (d, t) => `My method name: ${d.method || "[your method name]"}
+My ideal client: ${d.client}
+Before-state: ${d.before}
+After-state: ${d.after}
+What the session experience feels like: ${d.experience}
+The core shift: ${d.shift}
+My energetic tone: ${t.energy}
+
+Write a signature session description (150-200 words) that I could use on a sales page, booking page, or Skool community. Structure it like this:
+
+1. Open with what the client is experiencing before they book (make it feel like I'm reading their mind)
+2. Describe what happens inside the session without giving away the full process
+3. Name the shift they leave with
+4. Include 3 specific outcome bullet points that speak directly to my ideal client. These should NOT be generic ("gain clarity," "feel empowered," "find your purpose"). They should be concrete and specific to my client's actual situation. Example of generic: "✓ Feel more confident." Example of specific: "✓ Walk away with the exact 2-sentence answer to 'what do you do?' that makes your ideal client lean in." Base them on my before-state, after-state, and the shift I create.
+5. Close with a line that makes them feel the "after"
+
+Tone should feel ${t.adj} and ${t.feel}. Name my method naturally. Do not use the words "transformative," "unlock," or "empower."
+
+After the description, suggest 10 names for this signature session. Each name should:
+- Feel ${t.adj} and match my brand energy
+- Hint at the experience or the shift, not just the modality
+- Avoid generic names like "Discovery Call," "Clarity Session," or "Breakthrough Session"
+- Mix approaches: some evocative/poetic, some clear/direct, some that combine both
+- Be something my ideal client would feel excited to book, not confused by`
+  }, {
+    id: "promo",
+    title: "Promo Caption Prompts",
+    category: "Deeper Piece",
+    generate: (d, t) => `My method: ${d.method || "[your method name]"}
+My ideal client: ${d.client}
+Before-state: ${d.before}
+After-state: ${d.after}
+Session experience: ${d.experience}
+Core shift: ${d.shift}
+Tone: ${t.energy}
+
+Write 3 social media promotional captions for my method. For EACH caption, provide:
+
+A) GRAPHIC HOOK: A short, punchy text overlay for the image/graphic (under 10 words). This is the text that goes ON the visual, not in the caption. It should stop the scroll and be different from the caption hook. Think bold statement, provocative question, or a phrase that creates curiosity.
+
+B) CAPTION: The full caption text that goes below the graphic.
+- Open with a hook that is NOT a question and is DIFFERENT from the graphic hook (use a bold statement, a scene, or a pattern interrupt)
+- Include one line about the before-state that makes my client feel seen
+- Mention my method name naturally (not forced)
+- End with a CTA that matches the tone
+
+Caption 1: Educational angle (teach something about the shift I create)
+Caption 2: Story angle (paint a picture of a client experience, fictionalized)
+Caption 3: Direct invitation (for when I'm actively booking)
+
+Each caption should be 80-150 words. Tone: ${t.adj}. Use line breaks generously. Do not use hashtags.`
+  }, {
+    id: "salespage",
+    title: "Sales Page Section Prompts",
+    category: "Deeper Piece",
+    generate: (d, t) => `My method: ${d.method || "[your method name]"}
+My ideal client: ${d.client}
+Before-state: ${d.before}
+After-state: ${d.after}
+Session experience: ${d.experience}
+Core shift: ${d.shift}
+Tone: ${t.energy}
+
+Write 5 distinct sections for a sales or landing page for my method.
+
+Section 1 — THE HERO (above the fold): Write a headline (under 12 words) that names the shift, not the method. Below it, write a subheadline (1-2 sentences) that speaks directly to my ideal client's current state and hints at what's possible. Then write a short paragraph (2-3 sentences) that makes them feel seen and creates enough pull to keep scrolling. Include a CTA button text suggestion.
+Section 2 — THE PROBLEM (80-120 words): Describe what my ideal client is experiencing right now. Make it visceral and specific. They should read this and think "how does she know?"
+Section 3 — THE METHOD (80-120 words): Introduce ${d.method || "my method"} without over-explaining. Focus on what makes it different and what it feels like, not a step-by-step breakdown.
+Section 4 — THE SHIFT (80-120 words): Paint the after-picture. What does life/business/practice feel like after this work? Be specific and sensory.
+Section 5 — THE INVITATION (80-120 words): Write a closing section that invites them in. Not pushy. The tone should feel like ${t.feel}.
+
+Do not use "transformative," "unlock," "empower," or "journey." Voice: ${t.adj}.`
+  }, {
+    id: "objections",
+    title: "Objection Responses",
+    category: "Ongoing Tool",
+    generate: (d, t) => `My method: ${d.method || "[your method name]"}
+My ideal client: ${d.client}
+The shift I create: from ${d.before} to ${d.after}
+Tone: ${t.energy}
+
+My ideal client has these common objections before booking:
+1. "I've tried other things and nothing has worked"
+2. "I'm not sure I'm ready for this kind of work"
+3. "I can't afford it right now"
+4. "What if it doesn't work for me?"
+5. "I don't fully understand what this is"
+
+For each objection, write a 2-3 sentence response I can use in DMs, on calls, or in content. The response should:
+- Validate the concern without dismissing it
+- Reframe it through the lens of my method
+- Feel ${t.adj}, never salesy or defensive
+
+These should sound like ME talking to a real human, not copy from a sales playbook.`
+  }, {
+    id: "skool",
+    title: "Skool Community Copy",
+    category: "Ongoing Tool",
+    generate: (d, t) => `My method: ${d.method || "[your method name]"}
+My ideal client: ${d.client}
+Before-state: ${d.before}
+After-state: ${d.after}
+Session experience: ${d.experience}
+Core shift: ${d.shift}
+Tone: ${t.energy}
+
+Generate TWO pieces of copy for my Skool community page:
+
+═══════════════════════════
+PART 1 — GROUP DESCRIPTION (must be under 150 characters)
+═══════════════════════════
+
+This is the one-liner that appears under the group name on Skool. It needs to:
+- Say who it's for and what they get in one punchy line
+- Create curiosity or urgency
+- Include my method name if it fits within the character limit
+- Feel ${t.adj}
+
+Write 3 options so I can pick the one that hits hardest. Count the characters for each one and confirm each is under 150.
+
+═══════════════════════════
+PART 2 — ABOUT PAGE (must be under 950 characters)
+═══════════════════════════
+
+This is the longer description on the community's About section. Structure it using this flow:
+
+1. HEADLINE: Attention-grabbing, names my method, creates urgency or curiosity.
+
+2. PAIN + EMPATHY (1-2 sentences): The relatable struggle my ideal client faces. Show I get it because I've lived it. Build credibility without a resume.
+
+3. THE HARSH REALITY (3 bullet points using ❌): Specific problems from the before-state. Visceral, not vague.
+
+4. THE RESULTS (3 bullet points using ✅): What becomes possible. Pull from the after-state. Concrete, not aspirational.
+
+5. WHAT'S INSIDE (3 items with emojis): Tools, methods, or experiences framed as benefits.
+
+6. THIS IS FOR YOU IF (3 bullet points): Specific enough that the right person self-selects.
+
+7. CLOSING CTA: Urgency + benefit reinforcement + bold call to action. One final hook.
+
+Rules for the About page:
+- MUST be under 950 characters total (this gives you a buffer for editing). Count them. This is a hard limit.
+- Weave in 3-5 SEO keywords naturally (search terms my ideal client would type based on who they are and the shift I create). They should be invisible to the reader but present for search.
+- Use emojis (🔥 ✅ ❌ 🏆 📱 👥 etc.) to break up text
+- Use line breaks so it reads well on mobile
+- Voice: ${t.adj}. Do not use "safe space," "transformative," "unlock," "empower," or "journey." Write like a real practitioner with authority from experience, not credentials.`
+  }]
+}];
+const REFINEMENT_STEPS = [{
+  id: "voice",
+  icon: "🜁",
+  title: "Does It Sound Like Me?",
+  prompt: "Read it out loud. If you wouldn't say this to a friend over tea, it's not your voice yet.",
+  question: "Could I post this right now without editing the tone?"
+}, {
+  id: "specificity",
+  icon: "◆",
+  title: "Is It Specific or Generic?",
+  prompt: "If you swapped in any other practitioner's name and it still worked, it's too vague. Your method name, your client's exact struggle, your particular shift should be irreplaceable in this copy.",
+  question: "Could another practitioner claim this exact sentence?",
+  example: {
+    generic: "I help women step into their power and create a life they love through deep healing work that transforms from the inside out.",
+    specific: "I help tarot readers who are secretly terrified of doing paid readings move from 'I'm not ready yet' to fully booked and trusting their pulls within 90 days.",
+    note: "The generic version could be anyone. The specific version? You immediately know who this practitioner is, who she helps, and what shifts. That's the difference."
+  }
+}, {
+  id: "client",
+  icon: "✦",
+  title: "Would My Client Feel Seen?",
+  prompt: "Your ideal client should read this and think 'she's talking about me.' If it sounds like it could be about anyone going through a hard time, sharpen it.",
+  question: "Would my actual client DM me saying 'I felt that'?"
+}, {
+  id: "body",
+  icon: "❋",
+  title: "The Body Check",
+  prompt: "Read the copy and notice your body. Does something tighten, cringe, or go flat? That's the AI talking, not you. Does something land, warm, or open? Keep that part.",
+  question: "Does my body say yes or does it feel like wearing someone else's words?"
+}, {
+  id: "proof",
+  icon: "🜂",
+  title: "Is There Proof in It?",
+  prompt: "The strongest copy contains a detail only you could know. A moment from a session. A phrase your client actually said. A before/after that's real, not hypothetical. Seed the AI output with your real details, then regenerate.",
+  question: "Is there at least one line that could only come from my lived experience?"
+}, {
+  id: "edge",
+  icon: "⬥",
+  title: "Where's the Edge?",
+  prompt: "Safe copy doesn't convert. If every sentence is polished and pleasant but none of them make your ideal client stop scrolling, you've sanded off the edge. The edge is the part that's a little confronting, a little too real, a little bold for comfort. Keep that.",
+  question: "Is there one line that makes me slightly nervous to post? Good. That's the one."
+}];
+
+/* ─── Styles ─── */
+const font = {
+  display: "'Cinzel Decorative', serif",
+  accent: "'Playfair Display', serif",
+  body: "'Montserrat', sans-serif"
+};
+const palette = {
+  stone: "#D6D2C9",
+  stoneLight: "#E3DFDA",
+  stoneDark: "#C8C3BA",
+  teal: "#0E3D3D",
+  tealLight: "#1a4a4a",
+  mauve: "#7A5B6E",
+  sage: "#7D8F83",
+  copper: "#B86A48",
+  gold: "#C7A05A",
+  cream: "#F3E9DA",
+  warmWhite: "#FAF7F2",
+  parchment: "#EDE4D4"
+};
+const pageStyle = {
+  minHeight: "100vh",
+  fontFamily: font.body,
+  color: palette.teal,
+  background: `linear-gradient(135deg, rgba(122,91,110,0.06) 0%, ${palette.stone} 25%, #DDD8D0 50%, rgba(125,143,131,0.08) 75%, ${palette.stone} 100%)`,
+  position: "relative"
+};
+const overlayStyle = {
+  position: "fixed",
+  inset: 0,
+  backgroundImage: `url("data:image/svg+xml,%3Csvg viewBox='0 0 400 400' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='0.035'/%3E%3C/svg%3E")`,
+  pointerEvents: "none",
+  zIndex: 0
+};
+const containerStyle = {
+  maxWidth: 720,
+  margin: "0 auto",
+  padding: "2rem 1.5rem 4rem",
+  position: "relative",
+  zIndex: 1
+};
+
+/* ─── Shared Components ─── */
+
+function NavBar({
+  page,
+  setPage,
+  hasData
+}) {
+  const tabs = [{
+    id: "input",
+    label: "Your Method"
+  }, {
+    id: "prompts",
+    label: "Prompt Library"
+  }, {
+    id: "ritual",
+    label: "Copy Checklist"
+  }, {
+    id: "bank",
+    label: "Copy Bank"
+  }];
+  return /*#__PURE__*/React.createElement("div", {
+    style: {
+      display: "flex",
+      gap: 4,
+      padding: "1rem 0 0.5rem",
+      borderBottom: `1px solid rgba(14,61,61,0.1)`,
+      marginBottom: "2rem",
+      flexWrap: "wrap"
+    }
+  }, tabs.map(t => /*#__PURE__*/React.createElement("button", {
+    key: t.id,
+    onClick: () => setPage(t.id),
+    style: {
+      padding: "8px 16px",
+      fontFamily: font.body,
+      fontSize: 12,
+      fontWeight: page === t.id ? 600 : 400,
+      letterSpacing: "0.05em",
+      textTransform: "uppercase",
+      color: page === t.id ? palette.teal : palette.sage,
+      background: page === t.id ? "rgba(14,61,61,0.07)" : "transparent",
+      border: "none",
+      borderRadius: 6,
+      cursor: "pointer",
+      transition: "all 0.2s ease"
+    }
+  }, t.label)));
+}
+function SectionHeader({
+  icon,
+  title,
+  subtitle
+}) {
+  return /*#__PURE__*/React.createElement("div", {
+    style: {
+      marginBottom: "2rem",
+      textAlign: "center"
+    }
+  }, icon && /*#__PURE__*/React.createElement("div", {
+    style: {
+      fontSize: 24,
+      color: palette.copper,
+      marginBottom: 8,
+      letterSpacing: 8
+    }
+  }, icon), /*#__PURE__*/React.createElement("h2", {
+    style: {
+      fontFamily: font.display,
+      fontSize: 20,
+      fontWeight: 400,
+      color: palette.teal,
+      letterSpacing: "0.04em",
+      marginBottom: 6
+    }
+  }, title), subtitle && /*#__PURE__*/React.createElement("p", {
+    style: {
+      fontFamily: font.accent,
+      fontStyle: "italic",
+      fontSize: 14,
+      color: palette.mauve,
+      maxWidth: 480,
+      margin: "0 auto"
+    }
+  }, subtitle));
+}
+function CopyButton({
+  text,
+  label
+}) {
+  const [copied, setCopied] = useState(false);
+  const handleCopy = async () => {
+    try {
+      await navigator.clipboard.writeText(text);
+      setCopied(true);
+      setTimeout(() => setCopied(false), 2000);
+    } catch {
+      const ta = document.createElement("textarea");
+      ta.value = text;
+      document.body.appendChild(ta);
+      ta.select();
+      document.execCommand("copy");
+      document.body.removeChild(ta);
+      setCopied(true);
+      setTimeout(() => setCopied(false), 2000);
+    }
+  };
+  return /*#__PURE__*/React.createElement("button", {
+    onClick: handleCopy,
+    style: {
+      padding: "6px 14px",
+      fontFamily: font.body,
+      fontSize: 11,
+      fontWeight: 500,
+      letterSpacing: "0.06em",
+      textTransform: "uppercase",
+      color: copied ? palette.sage : palette.copper,
+      background: copied ? "rgba(125,143,131,0.1)" : "rgba(184,106,72,0.08)",
+      border: `1px solid ${copied ? "rgba(125,143,131,0.2)" : "rgba(184,106,72,0.15)"}`,
+      borderRadius: 5,
+      cursor: "pointer",
+      transition: "all 0.3s ease"
+    }
+  }, copied ? "✓ Copied" : label || "Copy Prompt");
+}
+
+/* ═══════════════════════════════════════════
+   PAGE 1 — INPUT
+   ═══════════════════════════════════════════ */
+
+function InputPage({
+  data,
+  setData,
+  onComplete
+}) {
+  const fields = [{
+    key: "client",
+    label: "Your Ideal Client",
+    placeholder: "e.g. Spiritual coaches who have the skills but can't articulate their offer...",
+    hint: "Be specific. Not 'women who want healing' — who exactly?",
+    type: "textarea"
+  }, {
+    key: "before",
+    label: "The Before-State",
+    placeholder: "e.g. They feel scattered across 5 modalities with no cohesive language for what they do...",
+    hint: "What is your client experiencing before they find you? Make it visceral.",
+    type: "textarea"
+  }, {
+    key: "after",
+    label: "The After-State",
+    placeholder: "e.g. They have a named method, clear session structure, and words that make clients say 'I need that'...",
+    hint: "What does life look like after the shift? Be sensory and specific.",
+    type: "textarea"
+  }, {
+    key: "experience",
+    label: "The Session Experience",
+    placeholder: "e.g. A blend of intuitive card pulls and strategic coaching that feels like being seen and structured at the same time...",
+    hint: "What does it feel like to be in the room with you? What happens?",
+    type: "textarea"
+  }, {
+    key: "shift",
+    label: "The Core Shift",
+    placeholder: "e.g. From 'I do a little bit of everything' to 'This is my method and here's exactly who it's for'...",
+    hint: "The single most important change your work creates.",
+    type: "textarea"
+  }];
+  const [selectedTone, setSelectedTone] = useState(data.tone || "");
+  const [customTone, setCustomTone] = useState(data.customTone || "");
+  const toneValid = selectedTone && (selectedTone !== "other" || customTone.trim());
+  const allFilled = fields.every(f => data[f.key]?.trim()) && toneValid;
+  const handleField = (key, value) => {
+    setData(prev => ({
+      ...prev,
+      [key]: value
+    }));
+  };
+  const handleSubmit = () => {
+    setData(prev => ({
+      ...prev,
+      tone: selectedTone,
+      customTone: customTone.trim()
+    }));
+    onComplete();
+  };
+  return /*#__PURE__*/React.createElement("div", null, /*#__PURE__*/React.createElement(SectionHeader, {
+    icon: "\u25C6 \u2726 \u25C6",
+    title: "Define Your Method",
+    subtitle: "Everything you enter here becomes the raw material for every prompt in your library."
+  }), /*#__PURE__*/React.createElement("div", {
+    style: {
+      background: "rgba(243,233,218,0.5)",
+      border: "1px solid rgba(199,160,90,0.2)",
+      borderRadius: 10,
+      padding: "16px 20px",
+      marginBottom: "2rem",
+      fontFamily: font.accent,
+      fontStyle: "italic",
+      fontSize: 14,
+      color: palette.mauve,
+      lineHeight: 1.6
+    }
+  }, "Take your time with these. The more specific you are, the better your prompts will work. You can always come back and refine your answers."), fields.map(f => /*#__PURE__*/React.createElement("div", {
+    key: f.key,
+    style: {
+      marginBottom: "1.75rem"
+    }
+  }, /*#__PURE__*/React.createElement("label", {
+    style: {
+      display: "block",
+      fontFamily: font.display,
+      fontSize: 16,
+      fontWeight: 400,
+      color: palette.copper,
+      letterSpacing: "0.03em",
+      marginBottom: 4
+    }
+  }, f.label), /*#__PURE__*/React.createElement("p", {
+    style: {
+      fontFamily: font.accent,
+      fontStyle: "italic",
+      fontSize: 13,
+      color: palette.sage,
+      marginBottom: 8
+    }
+  }, f.hint), f.type === "input" ? /*#__PURE__*/React.createElement("input", {
+    value: data[f.key] || "",
+    onChange: e => handleField(f.key, e.target.value),
+    placeholder: f.placeholder,
+    style: {
+      width: "100%",
+      padding: "12px 16px",
+      fontFamily: font.body,
+      fontSize: 14,
+      color: palette.teal,
+      background: palette.warmWhite,
+      border: `1px solid rgba(14,61,61,0.12)`,
+      borderRadius: 8,
+      outline: "none",
+      transition: "border-color 0.2s"
+    },
+    onFocus: e => e.target.style.borderColor = palette.copper,
+    onBlur: e => e.target.style.borderColor = "rgba(14,61,61,0.12)"
+  }) : /*#__PURE__*/React.createElement("textarea", {
+    value: data[f.key] || "",
+    onChange: e => handleField(f.key, e.target.value),
+    placeholder: f.placeholder,
+    rows: 3,
+    style: {
+      width: "100%",
+      padding: "12px 16px",
+      fontFamily: font.body,
+      fontSize: 14,
+      color: palette.teal,
+      background: palette.warmWhite,
+      border: `1px solid rgba(14,61,61,0.12)`,
+      borderRadius: 8,
+      outline: "none",
+      resize: "vertical",
+      lineHeight: 1.6,
+      transition: "border-color 0.2s"
+    },
+    onFocus: e => e.target.style.borderColor = palette.copper,
+    onBlur: e => e.target.style.borderColor = "rgba(14,61,61,0.12)"
+  }))), /*#__PURE__*/React.createElement("div", {
+    style: {
+      marginBottom: "2rem"
+    }
+  }, /*#__PURE__*/React.createElement("label", {
+    style: {
+      display: "block",
+      fontFamily: font.display,
+      fontSize: 16,
+      fontWeight: 400,
+      color: palette.copper,
+      letterSpacing: "0.03em",
+      marginBottom: 4
+    }
+  }, "Your Energetic Tone"), /*#__PURE__*/React.createElement("p", {
+    style: {
+      fontFamily: font.accent,
+      fontStyle: "italic",
+      fontSize: 13,
+      color: palette.sage,
+      marginBottom: 12
+    }
+  }, "This shapes how every generated prompt sounds. Pick the one that feels most like your brand."), /*#__PURE__*/React.createElement("div", {
+    style: {
+      display: "grid",
+      gridTemplateColumns: "repeat(3, 1fr)",
+      gap: 10
+    }
+  }, TONES.map(t => /*#__PURE__*/React.createElement("button", {
+    key: t.id,
+    onClick: () => setSelectedTone(t.id),
+    style: {
+      padding: "14px 12px",
+      fontFamily: font.body,
+      fontSize: 13,
+      fontWeight: selectedTone === t.id ? 600 : 400,
+      color: selectedTone === t.id ? palette.warmWhite : palette.teal,
+      background: selectedTone === t.id ? `linear-gradient(135deg, ${palette.teal}, ${palette.tealLight})` : palette.warmWhite,
+      border: `1px solid ${selectedTone === t.id ? palette.teal : "rgba(14,61,61,0.12)"}`,
+      borderRadius: 8,
+      cursor: "pointer",
+      transition: "all 0.25s ease",
+      textAlign: "center"
+    }
+  }, /*#__PURE__*/React.createElement("span", {
+    style: {
+      display: "block",
+      fontSize: 18,
+      marginBottom: 4
+    }
+  }, t.icon), t.label))), selectedTone === "other" && /*#__PURE__*/React.createElement("div", {
+    style: {
+      marginTop: 12
+    }
+  }, /*#__PURE__*/React.createElement("input", {
+    value: customTone,
+    onChange: e => setCustomTone(e.target.value),
+    placeholder: "Describe your energetic tone (e.g. warm but edgy, sacred but practical, soft power...)",
+    style: {
+      width: "100%",
+      padding: "12px 16px",
+      fontFamily: font.body,
+      fontSize: 14,
+      color: palette.teal,
+      background: palette.warmWhite,
+      border: "1px solid rgba(14,61,61,0.12)",
+      borderRadius: 8,
+      outline: "none",
+      transition: "border-color 0.2s"
+    },
+    onFocus: e => e.target.style.borderColor = palette.copper,
+    onBlur: e => e.target.style.borderColor = "rgba(14,61,61,0.12)"
+  }))), /*#__PURE__*/React.createElement("div", {
+    style: {
+      marginBottom: "2rem",
+      background: "rgba(243,233,218,0.4)",
+      border: "1px solid rgba(199,160,90,0.15)",
+      borderRadius: 10,
+      padding: "16px 20px"
+    }
+  }, /*#__PURE__*/React.createElement("div", {
+    style: {
+      display: "flex",
+      alignItems: "center",
+      gap: 8,
+      marginBottom: 4
+    }
+  }, /*#__PURE__*/React.createElement("label", {
+    style: {
+      fontFamily: font.display,
+      fontSize: 16,
+      fontWeight: 400,
+      color: palette.copper,
+      letterSpacing: "0.03em"
+    }
+  }, "Your Method Name"), /*#__PURE__*/React.createElement("span", {
+    style: {
+      fontFamily: font.body,
+      fontSize: 10,
+      fontWeight: 500,
+      textTransform: "uppercase",
+      letterSpacing: "0.08em",
+      color: palette.sage,
+      background: "rgba(125,143,131,0.1)",
+      padding: "2px 8px",
+      borderRadius: 3
+    }
+  }, "Optional")), /*#__PURE__*/React.createElement("p", {
+    style: {
+      fontFamily: font.accent,
+      fontStyle: "italic",
+      fontSize: 13,
+      color: palette.mauve,
+      marginBottom: 10,
+      lineHeight: 1.5
+    }
+  }, "Don't have one yet? Skip this and use the \"Method Name Brainstorm\" prompt in your library to explore names with AI first. Come back and add it once you've landed on one."), /*#__PURE__*/React.createElement("input", {
+    value: data.method || "",
+    onChange: e => handleField("method", e.target.value),
+    placeholder: "e.g. The Mirror Method, Soul Architecture, Flame Reading...",
+    style: {
+      width: "100%",
+      padding: "12px 16px",
+      fontFamily: font.body,
+      fontSize: 14,
+      color: palette.teal,
+      background: palette.warmWhite,
+      border: "1px solid rgba(14,61,61,0.12)",
+      borderRadius: 8,
+      outline: "none",
+      transition: "border-color 0.2s"
+    },
+    onFocus: e => e.target.style.borderColor = palette.copper,
+    onBlur: e => e.target.style.borderColor = "rgba(14,61,61,0.12)"
+  })), /*#__PURE__*/React.createElement("button", {
+    onClick: handleSubmit,
+    disabled: !allFilled,
+    style: {
+      width: "100%",
+      padding: "16px",
+      fontFamily: font.display,
+      fontSize: 14,
+      fontWeight: 400,
+      letterSpacing: "0.08em",
+      textTransform: "uppercase",
+      color: allFilled ? palette.warmWhite : palette.sage,
+      background: allFilled ? `linear-gradient(135deg, ${palette.copper}, ${palette.gold})` : "rgba(125,143,131,0.15)",
+      border: "none",
+      borderRadius: 8,
+      cursor: allFilled ? "pointer" : "default",
+      transition: "all 0.3s ease",
+      opacity: allFilled ? 1 : 0.6
+    }
+  }, "Generate My Prompt Library \u2192"), allFilled && /*#__PURE__*/React.createElement("div", {
+    style: {
+      textAlign: "center",
+      marginTop: 12
+    }
+  }, /*#__PURE__*/React.createElement(CopyButton, {
+    text: [`═══ MY METHOD DETAILS ═══`, ``, `Ideal Client: ${data.client}`, ``, `Before-State: ${data.before}`, ``, `After-State: ${data.after}`, ``, `Session Experience: ${data.experience}`, ``, `Core Shift: ${data.shift}`, ``, `Energetic Tone: ${selectedTone === "other" ? customTone : selectedTone}`, ``, data.method ? `Method Name: ${data.method}` : `Method Name: (not set yet)`].join("\n"),
+    label: "\uD83D\uDCCB Copy All Method Details"
+  }), /*#__PURE__*/React.createElement("p", {
+    style: {
+      fontFamily: font.accent,
+      fontStyle: "italic",
+      fontSize: 12,
+      color: palette.sage,
+      textAlign: "center",
+      marginTop: 6
+    }
+  }, "Paste into your Google Doc, Notion, or Skool group for safekeeping")));
+}
+
+/* ═══════════════════════════════════════════
+   PAGE 2 — PROMPT LIBRARY
+   ═══════════════════════════════════════════ */
+
+function PromptLibrary({
+  data,
+  addToBank
+}) {
+  const tone = data.tone === "other" ? {
+    adj: data.customTone,
+    verb: "creates",
+    feel: data.customTone,
+    energy: data.customTone
+  } : TONE_LANGUAGE[data.tone] || TONE_LANGUAGE.grounded;
+  const [expanded, setExpanded] = useState(null);
+  const displayTone = data.tone === "other" ? data.customTone : data.tone;
+  return /*#__PURE__*/React.createElement("div", null, /*#__PURE__*/React.createElement(SectionHeader, {
+    icon: "\u2726 \u25C6 \u2726",
+    title: "Your Prompt Library",
+    subtitle: "Each prompt is pre-filled with your method details. Copy it, paste it into Claude, and refine from there."
+  }), /*#__PURE__*/React.createElement("div", {
+    style: {
+      background: "rgba(243,233,218,0.5)",
+      border: "1px solid rgba(199,160,90,0.2)",
+      borderRadius: 10,
+      padding: "14px 18px",
+      marginBottom: "2rem",
+      display: "flex",
+      alignItems: "center",
+      gap: 12
+    }
+  }, /*#__PURE__*/React.createElement("span", {
+    style: {
+      fontSize: 18,
+      color: palette.copper
+    }
+  }, TONES.find(t => t.id === data.tone)?.icon), /*#__PURE__*/React.createElement("div", null, /*#__PURE__*/React.createElement("div", {
+    style: {
+      fontFamily: font.body,
+      fontSize: 12,
+      fontWeight: 600,
+      color: palette.teal,
+      textTransform: "uppercase",
+      letterSpacing: "0.06em"
+    }
+  }, "Tone: ", displayTone), /*#__PURE__*/React.createElement("div", {
+    style: {
+      fontFamily: font.accent,
+      fontStyle: "italic",
+      fontSize: 13,
+      color: palette.mauve
+    }
+  }, data.method ? `Method: ${data.method}` : "Method name: not set yet"))), PROMPT_SECTIONS.map(section => /*#__PURE__*/React.createElement("div", {
+    key: section.id,
+    style: {
+      marginBottom: "2.5rem"
+    }
+  }, /*#__PURE__*/React.createElement("h3", {
+    style: {
+      fontFamily: font.display,
+      fontSize: 16,
+      fontWeight: 400,
+      color: palette.teal,
+      letterSpacing: "0.03em",
+      marginBottom: 4
+    }
+  }, section.title), /*#__PURE__*/React.createElement("p", {
+    style: {
+      fontFamily: font.accent,
+      fontStyle: "italic",
+      fontSize: 13,
+      color: palette.mauve,
+      marginBottom: "1.25rem"
+    }
+  }, section.subtitle), section.prompts.map(p => {
+    const isOpen = expanded === p.id;
+    const promptText = p.generate(data, tone);
+    return /*#__PURE__*/React.createElement("div", {
+      key: p.id,
+      style: {
+        background: palette.warmWhite,
+        border: `1px solid ${isOpen ? "rgba(184,106,72,0.25)" : "rgba(14,61,61,0.08)"}`,
+        borderRadius: 10,
+        marginBottom: 12,
+        overflow: "hidden",
+        transition: "border-color 0.3s ease"
+      }
+    }, /*#__PURE__*/React.createElement("button", {
+      onClick: () => setExpanded(isOpen ? null : p.id),
+      style: {
+        width: "100%",
+        padding: "14px 18px",
+        display: "flex",
+        justifyContent: "space-between",
+        alignItems: "center",
+        background: "transparent",
+        border: "none",
+        cursor: "pointer",
+        fontFamily: font.body
+      }
+    }, /*#__PURE__*/React.createElement("div", {
+      style: {
+        textAlign: "left"
+      }
+    }, /*#__PURE__*/React.createElement("div", {
+      style: {
+        fontSize: 14,
+        fontWeight: 500,
+        color: palette.teal
+      }
+    }, p.title), /*#__PURE__*/React.createElement("div", {
+      style: {
+        fontSize: 11,
+        color: palette.sage,
+        marginTop: 2,
+        textTransform: "uppercase",
+        letterSpacing: "0.06em"
+      }
+    }, p.category)), /*#__PURE__*/React.createElement("span", {
+      style: {
+        fontSize: 18,
+        color: palette.copper,
+        transform: isOpen ? "rotate(45deg)" : "rotate(0deg)",
+        transition: "transform 0.25s ease"
+      }
+    }, "+")), isOpen && /*#__PURE__*/React.createElement("div", {
+      style: {
+        padding: "0 18px 16px",
+        animation: "fadeIn 0.3s ease"
+      }
+    }, /*#__PURE__*/React.createElement("div", {
+      style: {
+        background: "rgba(14,61,61,0.03)",
+        borderRadius: 8,
+        padding: "14px 16px",
+        marginBottom: 12,
+        fontFamily: font.body,
+        fontSize: 13,
+        lineHeight: 1.7,
+        color: palette.tealLight,
+        whiteSpace: "pre-wrap"
+      }
+    }, promptText), /*#__PURE__*/React.createElement("div", {
+      style: {
+        display: "flex",
+        gap: 8,
+        flexWrap: "wrap"
+      }
+    }, /*#__PURE__*/React.createElement(CopyButton, {
+      text: promptText
+    }), /*#__PURE__*/React.createElement("button", {
+      onClick: () => addToBank({
+        title: p.title,
+        text: promptText,
+        category: p.category
+      }),
+      style: {
+        padding: "6px 14px",
+        fontFamily: font.body,
+        fontSize: 11,
+        fontWeight: 500,
+        letterSpacing: "0.06em",
+        textTransform: "uppercase",
+        color: palette.mauve,
+        background: "rgba(122,91,110,0.08)",
+        border: "1px solid rgba(122,91,110,0.15)",
+        borderRadius: 5,
+        cursor: "pointer"
+      }
+    }, "+ Save to Copy Bank"))));
+  }))));
+}
+
+/* ═══════════════════════════════════════════
+   PAGE 3 — REFINEMENT RITUAL
+   ═══════════════════════════════════════════ */
+
+function RefinementRitual() {
+  const [checks, setChecks] = useState({});
+  const toggle = id => {
+    setChecks(prev => ({
+      ...prev,
+      [id]: !prev[id]
+    }));
+  };
+  const checkedCount = Object.values(checks).filter(Boolean).length;
+  return /*#__PURE__*/React.createElement("div", null, /*#__PURE__*/React.createElement(SectionHeader, {
+    icon: "\u274B \uD83D\uDF01 \u274B",
+    title: "The Copy Checklist",
+    subtitle: "Run every piece of AI-generated copy through these six checkpoints before you publish."
+  }), /*#__PURE__*/React.createElement("div", {
+    style: {
+      background: "rgba(243,233,218,0.5)",
+      border: "1px solid rgba(199,160,90,0.2)",
+      borderRadius: 10,
+      padding: "16px 20px",
+      marginBottom: "2rem",
+      fontFamily: font.accent,
+      fontStyle: "italic",
+      fontSize: 14,
+      color: palette.mauve,
+      lineHeight: 1.6
+    }
+  }, "AI is the oracle, not the author. It gives you the raw material. Your voice, your experience, your knowing is what turns a prompt output into copy that converts. This checklist teaches you to listen for the difference."), /*#__PURE__*/React.createElement("div", {
+    style: {
+      display: "flex",
+      alignItems: "center",
+      gap: 10,
+      marginBottom: "1.5rem",
+      padding: "0 4px"
+    }
+  }, /*#__PURE__*/React.createElement("div", {
+    style: {
+      flex: 1,
+      height: 3,
+      background: "rgba(14,61,61,0.08)",
+      borderRadius: 2,
+      overflow: "hidden"
+    }
+  }, /*#__PURE__*/React.createElement("div", {
+    style: {
+      width: `${checkedCount / REFINEMENT_STEPS.length * 100}%`,
+      height: "100%",
+      background: `linear-gradient(90deg, ${palette.copper}, ${palette.gold})`,
+      borderRadius: 2,
+      transition: "width 0.4s ease"
+    }
+  })), /*#__PURE__*/React.createElement("span", {
+    style: {
+      fontFamily: font.body,
+      fontSize: 11,
+      color: palette.sage,
+      fontWeight: 500,
+      letterSpacing: "0.04em"
+    }
+  }, checkedCount, "/", REFINEMENT_STEPS.length)), REFINEMENT_STEPS.map((step, i) => /*#__PURE__*/React.createElement("div", {
+    key: step.id,
+    onClick: () => toggle(step.id),
+    style: {
+      background: checks[step.id] ? "rgba(125,143,131,0.08)" : palette.warmWhite,
+      border: `1px solid ${checks[step.id] ? "rgba(125,143,131,0.2)" : "rgba(14,61,61,0.08)"}`,
+      borderRadius: 10,
+      padding: "18px 20px",
+      marginBottom: 12,
+      cursor: "pointer",
+      transition: "all 0.3s ease",
+      opacity: checks[step.id] ? 0.75 : 1
+    }
+  }, /*#__PURE__*/React.createElement("div", {
+    style: {
+      display: "flex",
+      alignItems: "flex-start",
+      gap: 14
+    }
+  }, /*#__PURE__*/React.createElement("div", {
+    style: {
+      width: 22,
+      height: 22,
+      minWidth: 22,
+      borderRadius: 6,
+      border: `2px solid ${checks[step.id] ? palette.sage : "rgba(14,61,61,0.2)"}`,
+      background: checks[step.id] ? palette.sage : "transparent",
+      display: "flex",
+      alignItems: "center",
+      justifyContent: "center",
+      transition: "all 0.2s ease",
+      marginTop: 2
+    }
+  }, checks[step.id] && /*#__PURE__*/React.createElement("span", {
+    style: {
+      color: palette.warmWhite,
+      fontSize: 13,
+      fontWeight: 700
+    }
+  }, "\u2713")), /*#__PURE__*/React.createElement("div", {
+    style: {
+      flex: 1
+    }
+  }, /*#__PURE__*/React.createElement("div", {
+    style: {
+      display: "flex",
+      alignItems: "center",
+      gap: 8,
+      marginBottom: 6
+    }
+  }, /*#__PURE__*/React.createElement("span", {
+    style: {
+      fontSize: 16,
+      color: palette.copper
+    }
+  }, step.icon), /*#__PURE__*/React.createElement("h4", {
+    style: {
+      fontFamily: font.display,
+      fontSize: 14,
+      fontWeight: 400,
+      color: palette.teal,
+      letterSpacing: "0.02em"
+    }
+  }, step.title)), /*#__PURE__*/React.createElement("p", {
+    style: {
+      fontFamily: font.body,
+      fontSize: 13,
+      color: palette.tealLight,
+      lineHeight: 1.6,
+      marginBottom: 8
+    }
+  }, step.prompt), /*#__PURE__*/React.createElement("p", {
+    style: {
+      fontFamily: font.accent,
+      fontStyle: "italic",
+      fontSize: 13,
+      color: palette.mauve
+    }
+  }, "Ask yourself: ", step.question), step.example && /*#__PURE__*/React.createElement("div", {
+    style: {
+      marginTop: 14,
+      borderTop: "1px solid rgba(14,61,61,0.06)",
+      paddingTop: 14
+    },
+    onClick: e => e.stopPropagation()
+  }, /*#__PURE__*/React.createElement("div", {
+    style: {
+      fontFamily: font.body,
+      fontSize: 10,
+      fontWeight: 600,
+      textTransform: "uppercase",
+      letterSpacing: "0.1em",
+      color: palette.sage,
+      marginBottom: 10
+    }
+  }, "See the difference"), /*#__PURE__*/React.createElement("div", {
+    style: {
+      background: "rgba(184,106,72,0.04)",
+      border: "1px solid rgba(184,106,72,0.12)",
+      borderRadius: 8,
+      padding: "12px 14px",
+      marginBottom: 8
+    }
+  }, /*#__PURE__*/React.createElement("div", {
+    style: {
+      fontFamily: font.body,
+      fontSize: 10,
+      fontWeight: 600,
+      textTransform: "uppercase",
+      letterSpacing: "0.1em",
+      color: palette.copper,
+      marginBottom: 6
+    }
+  }, "\u2715 Generic"), /*#__PURE__*/React.createElement("p", {
+    style: {
+      fontFamily: font.accent,
+      fontStyle: "italic",
+      fontSize: 13,
+      color: palette.tealLight,
+      lineHeight: 1.55
+    }
+  }, "\"", step.example.generic, "\"")), /*#__PURE__*/React.createElement("div", {
+    style: {
+      background: "rgba(125,143,131,0.06)",
+      border: "1px solid rgba(125,143,131,0.15)",
+      borderRadius: 8,
+      padding: "12px 14px",
+      marginBottom: 8
+    }
+  }, /*#__PURE__*/React.createElement("div", {
+    style: {
+      fontFamily: font.body,
+      fontSize: 10,
+      fontWeight: 600,
+      textTransform: "uppercase",
+      letterSpacing: "0.1em",
+      color: palette.sage,
+      marginBottom: 6
+    }
+  }, "\u2713 Specific"), /*#__PURE__*/React.createElement("p", {
+    style: {
+      fontFamily: font.accent,
+      fontStyle: "italic",
+      fontSize: 13,
+      color: palette.tealLight,
+      lineHeight: 1.55
+    }
+  }, "\"", step.example.specific, "\"")), /*#__PURE__*/React.createElement("p", {
+    style: {
+      fontFamily: font.body,
+      fontSize: 12,
+      color: palette.mauve,
+      lineHeight: 1.55,
+      marginTop: 4
+    }
+  }, step.example.note)))))), checkedCount === REFINEMENT_STEPS.length && /*#__PURE__*/React.createElement("div", {
+    style: {
+      textAlign: "center",
+      padding: "2rem",
+      marginTop: "1rem",
+      background: "rgba(199,160,90,0.08)",
+      borderRadius: 10,
+      border: "1px solid rgba(199,160,90,0.2)"
+    }
+  }, /*#__PURE__*/React.createElement("div", {
+    style: {
+      fontSize: 24,
+      marginBottom: 8
+    }
+  }, "\u2726"), /*#__PURE__*/React.createElement("p", {
+    style: {
+      fontFamily: font.display,
+      fontSize: 16,
+      color: palette.teal,
+      marginBottom: 6
+    }
+  }, "Checklist Complete"), /*#__PURE__*/React.createElement("p", {
+    style: {
+      fontFamily: font.accent,
+      fontStyle: "italic",
+      fontSize: 14,
+      color: palette.mauve
+    }
+  }, "This copy has been refined through your body, your voice, and your knowing. It's ready.")));
+}
+
+/* ═══════════════════════════════════════════
+   PAGE 4 — COPY BANK
+   ═══════════════════════════════════════════ */
+
+function CopyBank({
+  bank,
+  setBank
+}) {
+  const [newEntry, setNewEntry] = useState("");
+  const [newTag, setNewTag] = useState("bio");
+  const [filter, setFilter] = useState("all");
+  const tags = [{
+    id: "bio",
+    label: "Bio"
+  }, {
+    id: "caption",
+    label: "Caption"
+  }, {
+    id: "sales",
+    label: "Sales Page"
+  }, {
+    id: "session",
+    label: "Session"
+  }, {
+    id: "objection",
+    label: "Objection"
+  }, {
+    id: "hook",
+    label: "Hook"
+  }, {
+    id: "other",
+    label: "Other"
+  }];
+  const addEntry = () => {
+    if (!newEntry.trim()) return;
+    setBank(prev => [...prev, {
+      id: Date.now(),
+      text: newEntry.trim(),
+      tag: newTag,
+      saved: new Date().toLocaleDateString()
+    }]);
+    setNewEntry("");
+  };
+  const removeEntry = id => {
+    setBank(prev => prev.filter(e => e.id !== id));
+  };
+  const filtered = filter === "all" ? bank : bank.filter(e => e.tag === filter);
+  return /*#__PURE__*/React.createElement("div", null, /*#__PURE__*/React.createElement(SectionHeader, {
+    icon: "\u2727 \u25C6 \u2727",
+    title: "Your Copy Bank",
+    subtitle: "Collect the lines that land. Paste your best copy here so you can reuse it across posts, offers, bios, and sales pages."
+  }), /*#__PURE__*/React.createElement("div", {
+    style: {
+      background: palette.warmWhite,
+      border: "1px solid rgba(14,61,61,0.08)",
+      borderRadius: 10,
+      padding: "18px 20px",
+      marginBottom: "1.5rem"
+    }
+  }, /*#__PURE__*/React.createElement("textarea", {
+    value: newEntry,
+    onChange: e => setNewEntry(e.target.value),
+    placeholder: "Paste a line, a paragraph, a phrase that feels like you...",
+    rows: 3,
+    style: {
+      width: "100%",
+      padding: "12px 14px",
+      fontFamily: font.body,
+      fontSize: 14,
+      color: palette.teal,
+      background: "rgba(14,61,61,0.02)",
+      border: "1px solid rgba(14,61,61,0.08)",
+      borderRadius: 8,
+      outline: "none",
+      resize: "vertical",
+      lineHeight: 1.6,
+      marginBottom: 12
+    }
+  }), /*#__PURE__*/React.createElement("div", {
+    style: {
+      display: "flex",
+      gap: 8,
+      alignItems: "center",
+      flexWrap: "wrap"
+    }
+  }, /*#__PURE__*/React.createElement("span", {
+    style: {
+      fontFamily: font.body,
+      fontSize: 11,
+      color: palette.sage,
+      textTransform: "uppercase",
+      letterSpacing: "0.06em"
+    }
+  }, "Tag:"), tags.map(t => /*#__PURE__*/React.createElement("button", {
+    key: t.id,
+    onClick: () => setNewTag(t.id),
+    style: {
+      padding: "4px 10px",
+      fontFamily: font.body,
+      fontSize: 11,
+      fontWeight: newTag === t.id ? 600 : 400,
+      color: newTag === t.id ? palette.warmWhite : palette.teal,
+      background: newTag === t.id ? palette.teal : "rgba(14,61,61,0.05)",
+      border: `1px solid ${newTag === t.id ? palette.teal : "rgba(14,61,61,0.1)"}`,
+      borderRadius: 4,
+      cursor: "pointer",
+      transition: "all 0.2s"
+    }
+  }, t.label)), /*#__PURE__*/React.createElement("button", {
+    onClick: addEntry,
+    disabled: !newEntry.trim(),
+    style: {
+      marginLeft: "auto",
+      padding: "6px 16px",
+      fontFamily: font.body,
+      fontSize: 11,
+      fontWeight: 600,
+      letterSpacing: "0.06em",
+      textTransform: "uppercase",
+      color: newEntry.trim() ? palette.warmWhite : palette.sage,
+      background: newEntry.trim() ? `linear-gradient(135deg, ${palette.copper}, ${palette.gold})` : "rgba(125,143,131,0.15)",
+      border: "none",
+      borderRadius: 5,
+      cursor: newEntry.trim() ? "pointer" : "default"
+    }
+  }, "+ Save"))), bank.length > 0 && /*#__PURE__*/React.createElement("div", {
+    style: {
+      display: "flex",
+      gap: 6,
+      marginBottom: "1.25rem",
+      flexWrap: "wrap"
+    }
+  }, /*#__PURE__*/React.createElement("button", {
+    onClick: () => setFilter("all"),
+    style: {
+      padding: "4px 12px",
+      fontFamily: font.body,
+      fontSize: 11,
+      fontWeight: filter === "all" ? 600 : 400,
+      color: filter === "all" ? palette.copper : palette.sage,
+      background: filter === "all" ? "rgba(184,106,72,0.1)" : "transparent",
+      border: `1px solid ${filter === "all" ? "rgba(184,106,72,0.2)" : "transparent"}`,
+      borderRadius: 4,
+      cursor: "pointer"
+    }
+  }, "All (", bank.length, ")"), tags.map(t => {
+    const count = bank.filter(e => e.tag === t.id).length;
+    if (count === 0) return null;
+    return /*#__PURE__*/React.createElement("button", {
+      key: t.id,
+      onClick: () => setFilter(t.id),
+      style: {
+        padding: "4px 12px",
+        fontFamily: font.body,
+        fontSize: 11,
+        fontWeight: filter === t.id ? 600 : 400,
+        color: filter === t.id ? palette.copper : palette.sage,
+        background: filter === t.id ? "rgba(184,106,72,0.1)" : "transparent",
+        border: `1px solid ${filter === t.id ? "rgba(184,106,72,0.2)" : "transparent"}`,
+        borderRadius: 4,
+        cursor: "pointer"
+      }
+    }, t.label, " (", count, ")");
+  })), filtered.length === 0 ? /*#__PURE__*/React.createElement("div", {
+    style: {
+      textAlign: "center",
+      padding: "3rem 2rem",
+      color: palette.sage
+    }
+  }, /*#__PURE__*/React.createElement("div", {
+    style: {
+      fontSize: 28,
+      marginBottom: 12,
+      opacity: 0.5
+    }
+  }, "\u2727"), /*#__PURE__*/React.createElement("p", {
+    style: {
+      fontFamily: font.accent,
+      fontStyle: "italic",
+      fontSize: 14
+    }
+  }, bank.length === 0 ? "Your copy bank is empty. Start by generating prompts and saving lines that resonate." : "No entries match this filter.")) : filtered.map(entry => /*#__PURE__*/React.createElement("div", {
+    key: entry.id,
+    style: {
+      background: palette.warmWhite,
+      border: "1px solid rgba(14,61,61,0.08)",
+      borderRadius: 10,
+      padding: "14px 18px",
+      marginBottom: 10
+    }
+  }, /*#__PURE__*/React.createElement("p", {
+    style: {
+      fontFamily: font.body,
+      fontSize: 13,
+      color: palette.teal,
+      lineHeight: 1.6,
+      marginBottom: 10,
+      whiteSpace: "pre-wrap"
+    }
+  }, entry.text), /*#__PURE__*/React.createElement("div", {
+    style: {
+      display: "flex",
+      alignItems: "center",
+      gap: 8,
+      flexWrap: "wrap"
+    }
+  }, /*#__PURE__*/React.createElement("span", {
+    style: {
+      padding: "2px 8px",
+      fontFamily: font.body,
+      fontSize: 10,
+      fontWeight: 500,
+      textTransform: "uppercase",
+      letterSpacing: "0.06em",
+      color: palette.mauve,
+      background: "rgba(122,91,110,0.08)",
+      borderRadius: 3
+    }
+  }, entry.tag), entry.title && /*#__PURE__*/React.createElement("span", {
+    style: {
+      fontFamily: font.accent,
+      fontStyle: "italic",
+      fontSize: 11,
+      color: palette.sage
+    }
+  }, "from: ", entry.title), /*#__PURE__*/React.createElement("span", {
+    style: {
+      fontFamily: font.body,
+      fontSize: 10,
+      color: "rgba(125,143,131,0.6)",
+      marginLeft: "auto"
+    }
+  }, entry.saved), /*#__PURE__*/React.createElement(CopyButton, {
+    text: entry.text,
+    label: "Copy"
+  }), /*#__PURE__*/React.createElement("button", {
+    onClick: () => removeEntry(entry.id),
+    style: {
+      padding: "4px 8px",
+      fontFamily: font.body,
+      fontSize: 10,
+      color: "rgba(184,106,72,0.5)",
+      background: "transparent",
+      border: "1px solid rgba(184,106,72,0.15)",
+      borderRadius: 4,
+      cursor: "pointer"
+    }
+  }, "\u2715")))));
+}
+
+/* ═══════════════════════════════════════════
+   APP
+   ═══════════════════════════════════════════ */
+
+function MethodToMessageGenerator() {
+  const [page, setPage] = useState("input");
+  const [data, setData] = useState({
+    method: "",
+    client: "",
+    before: "",
+    after: "",
+    experience: "",
+    shift: "",
+    tone: "",
+    customTone: ""
+  });
+  const [bank, setBank] = useState([]);
+  const hasData = data.client && data.tone;
+  const addToBank = item => {
+    setBank(prev => [...prev, {
+      id: Date.now(),
+      text: item.text,
+      tag: "other",
+      title: item.title,
+      category: item.category,
+      saved: new Date().toLocaleDateString()
+    }]);
+  };
+  return /*#__PURE__*/React.createElement(React.Fragment, null, /*#__PURE__*/React.createElement("link", {
+    href: "https://fonts.googleapis.com/css2?family=Cinzel+Decorative:wght@400;700&family=Playfair+Display:ital,wght@0,400;0,600;1,400&family=Montserrat:wght@400;500;600&display=swap",
+    rel: "stylesheet"
+  }), /*#__PURE__*/React.createElement("style", null, `
+        @keyframes fadeIn {
+          from { opacity: 0; transform: translateY(8px); }
+          to { opacity: 1; transform: translateY(0); }
+        }
+        * { box-sizing: border-box; margin: 0; padding: 0; }
+        textarea:focus, input:focus { outline: none; }
+        ::placeholder { color: rgba(14,61,61,0.3); }
+        ::-webkit-scrollbar { width: 6px; }
+        ::-webkit-scrollbar-track { background: transparent; }
+        ::-webkit-scrollbar-thumb { background: rgba(14,61,61,0.12); border-radius: 3px; }
+      `), /*#__PURE__*/React.createElement("div", {
+    style: pageStyle
+  }, /*#__PURE__*/React.createElement("div", {
+    style: overlayStyle
+  }), /*#__PURE__*/React.createElement("div", {
+    style: containerStyle
+  }, /*#__PURE__*/React.createElement("div", {
+    style: {
+      textAlign: "center",
+      marginBottom: 8,
+      paddingTop: "1rem"
+    }
+  }, /*#__PURE__*/React.createElement("div", {
+    style: {
+      fontFamily: font.body,
+      fontSize: 10,
+      fontWeight: 500,
+      letterSpacing: "0.2em",
+      textTransform: "uppercase",
+      color: palette.sage,
+      marginBottom: 8
+    }
+  }, "Method Alchemy Challenge"), /*#__PURE__*/React.createElement("h1", {
+    style: {
+      fontFamily: font.display,
+      fontSize: 24,
+      fontWeight: 400,
+      color: palette.teal,
+      letterSpacing: "0.03em",
+      lineHeight: 1.3
+    }
+  }, "Method-to-Message Generator"), /*#__PURE__*/React.createElement("p", {
+    style: {
+      fontFamily: font.accent,
+      fontStyle: "italic",
+      fontSize: 14,
+      color: palette.mauve,
+      marginTop: 6
+    }
+  }, "From forged method to language that lands")), /*#__PURE__*/React.createElement(NavBar, {
+    page: page,
+    setPage: setPage,
+    hasData: hasData
+  }), /*#__PURE__*/React.createElement("div", {
+    style: {
+      animation: "fadeIn 0.4s ease"
+    },
+    key: page
+  }, page === "input" && /*#__PURE__*/React.createElement(InputPage, {
+    data: data,
+    setData: setData,
+    onComplete: () => setPage("prompts")
+  }), page === "prompts" && (hasData ? /*#__PURE__*/React.createElement(PromptLibrary, {
+    data: data,
+    addToBank: addToBank
+  }) : /*#__PURE__*/React.createElement(EmptyState, {
+    message: "Define your method first to generate your prompt library.",
+    action: () => setPage("input")
+  })), page === "ritual" && /*#__PURE__*/React.createElement(RefinementRitual, null), page === "bank" && /*#__PURE__*/React.createElement(CopyBank, {
+    bank: bank,
+    setBank: setBank
+  })))));
+}
+function EmptyState({
+  message,
+  action
+}) {
+  return /*#__PURE__*/React.createElement("div", {
+    style: {
+      textAlign: "center",
+      padding: "4rem 2rem"
+    }
+  }, /*#__PURE__*/React.createElement("div", {
+    style: {
+      fontSize: 32,
+      color: palette.copper,
+      marginBottom: 16,
+      opacity: 0.5
+    }
+  }, "\u25C6"), /*#__PURE__*/React.createElement("p", {
+    style: {
+      fontFamily: font.accent,
+      fontStyle: "italic",
+      fontSize: 15,
+      color: palette.mauve,
+      marginBottom: 20
+    }
+  }, message), /*#__PURE__*/React.createElement("button", {
+    onClick: action,
+    style: {
+      padding: "10px 24px",
+      fontFamily: font.display,
+      fontSize: 12,
+      fontWeight: 400,
+      letterSpacing: "0.08em",
+      textTransform: "uppercase",
+      color: palette.warmWhite,
+      background: `linear-gradient(135deg, ${palette.copper}, ${palette.gold})`,
+      border: "none",
+      borderRadius: 6,
+      cursor: "pointer"
+    }
+  }, "Define Your Method \u2192"));
+}
+ReactDOM.render(React.createElement(MethodToMessageGenerator), document.getElementById("root"));</script>
+</body>
+</html>
