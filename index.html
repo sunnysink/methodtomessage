@@ -1590,8 +1590,14 @@ function ArtifactFooter() {
    ═══════════════════════════════════════════ */
 
 function MethodToMessageGenerator() {
+  const STORAGE_KEY_DATA = "mtm_generator_data";
+  const STORAGE_KEY_BANK = "mtm_generator_bank";
+  const loadStored = (key, fallback) => {
+    try { const v = localStorage.getItem(key); return v ? JSON.parse(v) : fallback; }
+    catch(e) { return fallback; }
+  };
   const [page, setPage] = useState("input");
-  const [data, setData] = useState({
+  const [data, setData] = useState(() => loadStored(STORAGE_KEY_DATA, {
     method: "",
     client: "",
     before: "",
@@ -1600,8 +1606,10 @@ function MethodToMessageGenerator() {
     shift: "",
     tone: "",
     customTone: ""
-  });
-  const [bank, setBank] = useState([]);
+  }));
+  const [bank, setBank] = useState(() => loadStored(STORAGE_KEY_BANK, []));
+  useEffect(() => { try { localStorage.setItem(STORAGE_KEY_DATA, JSON.stringify(data)); } catch(e){} }, [data]);
+  useEffect(() => { try { localStorage.setItem(STORAGE_KEY_BANK, JSON.stringify(bank)); } catch(e){} }, [bank]);
   const hasData = data.client && data.tone;
   const addToBank = item => {
     setBank(prev => [...prev, {
