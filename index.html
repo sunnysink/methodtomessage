@@ -8,7 +8,7 @@
 <script src="https://cdnjs.cloudflare.com/ajax/libs/react-dom/18.2.0/umd/react-dom.production.min.js"></script>
 <style>
   * { box-sizing: border-box; margin: 0; padding: 0; }
-  body { background: #D6D2C9; }
+  body { background: #FAF3E6; }
 </style>
 </head>
 <body>
@@ -392,35 +392,40 @@ const REFINEMENT_STEPS = [{
 
 /* ─── Styles ─── */
 const font = {
-  display: "'Cinzel Decorative', serif",
-  accent: "'Playfair Display', serif",
-  body: "'Montserrat', sans-serif"
+  display: "'Cormorant Garamond', serif",
+  accent: "'Cormorant Garamond', serif",
+  body: "'Hanken Grotesk', sans-serif"
 };
 const palette = {
-  stone: "#D6D2C9",
-  stoneLight: "#E3DFDA",
-  stoneDark: "#C8C3BA",
-  teal: "#0E3D3D",
-  tealLight: "#1a4a4a",
-  mauve: "#7A5B6E",
-  sage: "#7D8F83",
-  copper: "#B86A48",
-  gold: "#C7A05A",
-  cream: "#F3E9DA",
-  warmWhite: "#FAF7F2",
-  parchment: "#EDE4D4"
+  stone: "#FAF3E6",
+  stoneLight: "#F2E8D2",
+  stoneDark: "#EDE0C6",
+  teal: "#33261A",
+  tealLight: "#6B5740",
+  mauve: "#8E6A5E",
+  sage: "#9A8A72",
+  copper: "#A37735",
+  gold: "#B49630",
+  cream: "#F2E8D2",
+  warmWhite: "#FFFAEE",
+  parchment: "#EDE0C6"
 };
 const pageStyle = {
   minHeight: "100vh",
   fontFamily: font.body,
   color: palette.teal,
-  background: `linear-gradient(135deg, rgba(122,91,110,0.06) 0%, ${palette.stone} 25%, #DDD8D0 50%, rgba(125,143,131,0.08) 75%, ${palette.stone} 100%)`,
+  background: `radial-gradient(ellipse 120% 90% at 50% -10%, #F2E8D2 0%, #FAF3E6 50%, #EDE0C6 100%)`,
   position: "relative"
 };
 const overlayStyle = {
   position: "fixed",
   inset: 0,
-  backgroundImage: `url("data:image/svg+xml,%3Csvg viewBox='0 0 400 400' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='0.035'/%3E%3C/svg%3E")`,
+  background: [
+    'radial-gradient(ellipse 60% 50% at 18% 12%, rgba(191,91,30,0.08) 0%, transparent 55%)',
+    'radial-gradient(ellipse 50% 55% at 85% 22%, rgba(180,150,48,0.10) 0%, transparent 52%)',
+    'radial-gradient(ellipse 55% 50% at 72% 88%, rgba(59,107,74,0.08) 0%, transparent 55%)',
+    'radial-gradient(ellipse 45% 55% at 8% 82%, rgba(142,106,94,0.06) 0%, transparent 55%)'
+  ].join(', '),
   pointerEvents: "none",
   zIndex: 0
 };
@@ -457,7 +462,7 @@ function NavBar({
       display: "flex",
       gap: 4,
       padding: "1rem 0 0.5rem",
-      borderBottom: `1px solid rgba(14,61,61,0.1)`,
+      borderBottom: `1px solid rgba(51,38,26,0.1)`,
       marginBottom: "2rem",
       flexWrap: "wrap"
     }
@@ -472,7 +477,7 @@ function NavBar({
       letterSpacing: "0.05em",
       textTransform: "uppercase",
       color: page === t.id ? palette.teal : palette.sage,
-      background: page === t.id ? "rgba(14,61,61,0.07)" : "transparent",
+      background: page === t.id ? "rgba(51,38,26,0.07)" : "transparent",
       border: "none",
       borderRadius: 6,
       cursor: "pointer",
@@ -548,8 +553,8 @@ function CopyButton({
       letterSpacing: "0.06em",
       textTransform: "uppercase",
       color: copied ? palette.sage : palette.copper,
-      background: copied ? "rgba(125,143,131,0.1)" : "rgba(184,106,72,0.08)",
-      border: `1px solid ${copied ? "rgba(125,143,131,0.2)" : "rgba(184,106,72,0.15)"}`,
+      background: copied ? "rgba(154,138,114,0.1)" : "rgba(163,119,53,0.08)",
+      border: `1px solid ${copied ? "rgba(154,138,114,0.2)" : "rgba(163,119,53,0.15)"}`,
       borderRadius: 5,
       cursor: "pointer",
       transition: "all 0.3s ease"
@@ -621,8 +626,8 @@ function InputPage({
     subtitle: "Everything you enter here becomes the raw material for every prompt in your library."
   }), /*#__PURE__*/React.createElement("div", {
     style: {
-      background: "rgba(243,233,218,0.5)",
-      border: "1px solid rgba(199,160,90,0.2)",
+      background: "rgba(255,250,238,0.5)",
+      border: "1px solid rgba(180,150,48,0.2)",
       borderRadius: 10,
       padding: "16px 20px",
       marginBottom: "2rem",
@@ -666,13 +671,13 @@ function InputPage({
       fontSize: 14,
       color: palette.teal,
       background: palette.warmWhite,
-      border: `1px solid rgba(14,61,61,0.12)`,
+      border: `1px solid rgba(51,38,26,0.12)`,
       borderRadius: 8,
       outline: "none",
       transition: "border-color 0.2s"
     },
     onFocus: e => e.target.style.borderColor = palette.copper,
-    onBlur: e => e.target.style.borderColor = "rgba(14,61,61,0.12)"
+    onBlur: e => e.target.style.borderColor = "rgba(51,38,26,0.12)"
   }) : /*#__PURE__*/React.createElement("textarea", {
     value: data[f.key] || "",
     onChange: e => handleField(f.key, e.target.value),
@@ -685,7 +690,7 @@ function InputPage({
       fontSize: 14,
       color: palette.teal,
       background: palette.warmWhite,
-      border: `1px solid rgba(14,61,61,0.12)`,
+      border: `1px solid rgba(51,38,26,0.12)`,
       borderRadius: 8,
       outline: "none",
       resize: "vertical",
@@ -693,7 +698,7 @@ function InputPage({
       transition: "border-color 0.2s"
     },
     onFocus: e => e.target.style.borderColor = palette.copper,
-    onBlur: e => e.target.style.borderColor = "rgba(14,61,61,0.12)"
+    onBlur: e => e.target.style.borderColor = "rgba(51,38,26,0.12)"
   }))), /*#__PURE__*/React.createElement("div", {
     style: {
       marginBottom: "2rem"
@@ -732,7 +737,7 @@ function InputPage({
       fontWeight: selectedTone === t.id ? 600 : 400,
       color: selectedTone === t.id ? palette.warmWhite : palette.teal,
       background: selectedTone === t.id ? `linear-gradient(135deg, ${palette.teal}, ${palette.tealLight})` : palette.warmWhite,
-      border: `1px solid ${selectedTone === t.id ? palette.teal : "rgba(14,61,61,0.12)"}`,
+      border: `1px solid ${selectedTone === t.id ? palette.teal : "rgba(51,38,26,0.12)"}`,
       borderRadius: 8,
       cursor: "pointer",
       transition: "all 0.25s ease",
@@ -759,18 +764,18 @@ function InputPage({
       fontSize: 14,
       color: palette.teal,
       background: palette.warmWhite,
-      border: "1px solid rgba(14,61,61,0.12)",
+      border: "1px solid rgba(51,38,26,0.12)",
       borderRadius: 8,
       outline: "none",
       transition: "border-color 0.2s"
     },
     onFocus: e => e.target.style.borderColor = palette.copper,
-    onBlur: e => e.target.style.borderColor = "rgba(14,61,61,0.12)"
+    onBlur: e => e.target.style.borderColor = "rgba(51,38,26,0.12)"
   }))), /*#__PURE__*/React.createElement("div", {
     style: {
       marginBottom: "2rem",
-      background: "rgba(243,233,218,0.4)",
-      border: "1px solid rgba(199,160,90,0.15)",
+      background: "rgba(255,250,238,0.4)",
+      border: "1px solid rgba(180,150,48,0.15)",
       borderRadius: 10,
       padding: "16px 20px"
     }
@@ -797,7 +802,7 @@ function InputPage({
       textTransform: "uppercase",
       letterSpacing: "0.08em",
       color: palette.sage,
-      background: "rgba(125,143,131,0.1)",
+      background: "rgba(154,138,114,0.1)",
       padding: "2px 8px",
       borderRadius: 3
     }
@@ -821,13 +826,13 @@ function InputPage({
       fontSize: 14,
       color: palette.teal,
       background: palette.warmWhite,
-      border: "1px solid rgba(14,61,61,0.12)",
+      border: "1px solid rgba(51,38,26,0.12)",
       borderRadius: 8,
       outline: "none",
       transition: "border-color 0.2s"
     },
     onFocus: e => e.target.style.borderColor = palette.copper,
-    onBlur: e => e.target.style.borderColor = "rgba(14,61,61,0.12)"
+    onBlur: e => e.target.style.borderColor = "rgba(51,38,26,0.12)"
   })), /*#__PURE__*/React.createElement("button", {
     onClick: handleSubmit,
     disabled: !allFilled,
@@ -840,7 +845,7 @@ function InputPage({
       letterSpacing: "0.08em",
       textTransform: "uppercase",
       color: allFilled ? palette.warmWhite : palette.sage,
-      background: allFilled ? `linear-gradient(135deg, ${palette.copper}, ${palette.gold})` : "rgba(125,143,131,0.15)",
+      background: allFilled ? `linear-gradient(135deg, ${palette.copper}, ${palette.gold})` : "rgba(154,138,114,0.15)",
       border: "none",
       borderRadius: 8,
       cursor: allFilled ? "pointer" : "default",
@@ -889,8 +894,8 @@ function PromptLibrary({
     subtitle: "Each prompt is pre-filled with your method details. Copy it, paste it into Claude, and refine from there."
   }), /*#__PURE__*/React.createElement("div", {
     style: {
-      background: "rgba(243,233,218,0.5)",
-      border: "1px solid rgba(199,160,90,0.2)",
+      background: "rgba(255,250,238,0.5)",
+      border: "1px solid rgba(180,150,48,0.2)",
       borderRadius: 10,
       padding: "14px 18px",
       marginBottom: "2rem",
@@ -948,7 +953,7 @@ function PromptLibrary({
       key: p.id,
       style: {
         background: palette.warmWhite,
-        border: `1px solid ${isOpen ? "rgba(184,106,72,0.25)" : "rgba(14,61,61,0.08)"}`,
+        border: `1px solid ${isOpen ? "rgba(163,119,53,0.25)" : "rgba(51,38,26,0.08)"}`,
         borderRadius: 10,
         marginBottom: 12,
         overflow: "hidden",
@@ -999,7 +1004,7 @@ function PromptLibrary({
       }
     }, /*#__PURE__*/React.createElement("div", {
       style: {
-        background: "rgba(14,61,61,0.03)",
+        background: "rgba(51,38,26,0.03)",
         borderRadius: 8,
         padding: "14px 16px",
         marginBottom: 12,
@@ -1031,8 +1036,8 @@ function PromptLibrary({
         letterSpacing: "0.06em",
         textTransform: "uppercase",
         color: palette.mauve,
-        background: "rgba(122,91,110,0.08)",
-        border: "1px solid rgba(122,91,110,0.15)",
+        background: "rgba(142,106,94,0.08)",
+        border: "1px solid rgba(142,106,94,0.15)",
         borderRadius: 5,
         cursor: "pointer"
       }
@@ -1059,8 +1064,8 @@ function RefinementRitual() {
     subtitle: "Run every piece of AI-generated copy through these six checkpoints before you publish."
   }), /*#__PURE__*/React.createElement("div", {
     style: {
-      background: "rgba(243,233,218,0.5)",
-      border: "1px solid rgba(199,160,90,0.2)",
+      background: "rgba(255,250,238,0.5)",
+      border: "1px solid rgba(180,150,48,0.2)",
       borderRadius: 10,
       padding: "16px 20px",
       marginBottom: "2rem",
@@ -1082,7 +1087,7 @@ function RefinementRitual() {
     style: {
       flex: 1,
       height: 3,
-      background: "rgba(14,61,61,0.08)",
+      background: "rgba(51,38,26,0.08)",
       borderRadius: 2,
       overflow: "hidden"
     }
@@ -1106,8 +1111,8 @@ function RefinementRitual() {
     key: step.id,
     onClick: () => toggle(step.id),
     style: {
-      background: checks[step.id] ? "rgba(125,143,131,0.08)" : palette.warmWhite,
-      border: `1px solid ${checks[step.id] ? "rgba(125,143,131,0.2)" : "rgba(14,61,61,0.08)"}`,
+      background: checks[step.id] ? "rgba(154,138,114,0.08)" : palette.warmWhite,
+      border: `1px solid ${checks[step.id] ? "rgba(154,138,114,0.2)" : "rgba(51,38,26,0.08)"}`,
       borderRadius: 10,
       padding: "18px 20px",
       marginBottom: 12,
@@ -1127,7 +1132,7 @@ function RefinementRitual() {
       height: 22,
       minWidth: 22,
       borderRadius: 6,
-      border: `2px solid ${checks[step.id] ? palette.sage : "rgba(14,61,61,0.2)"}`,
+      border: `2px solid ${checks[step.id] ? palette.sage : "rgba(51,38,26,0.2)"}`,
       background: checks[step.id] ? palette.sage : "transparent",
       display: "flex",
       alignItems: "center",
@@ -1183,7 +1188,7 @@ function RefinementRitual() {
   }, "Ask yourself: ", step.question), step.example && /*#__PURE__*/React.createElement("div", {
     style: {
       marginTop: 14,
-      borderTop: "1px solid rgba(14,61,61,0.06)",
+      borderTop: "1px solid rgba(51,38,26,0.06)",
       paddingTop: 14
     },
     onClick: e => e.stopPropagation()
@@ -1199,8 +1204,8 @@ function RefinementRitual() {
     }
   }, "See the difference"), /*#__PURE__*/React.createElement("div", {
     style: {
-      background: "rgba(184,106,72,0.04)",
-      border: "1px solid rgba(184,106,72,0.12)",
+      background: "rgba(163,119,53,0.04)",
+      border: "1px solid rgba(163,119,53,0.12)",
       borderRadius: 8,
       padding: "12px 14px",
       marginBottom: 8
@@ -1225,8 +1230,8 @@ function RefinementRitual() {
     }
   }, "\"", step.example.generic, "\"")), /*#__PURE__*/React.createElement("div", {
     style: {
-      background: "rgba(125,143,131,0.06)",
-      border: "1px solid rgba(125,143,131,0.15)",
+      background: "rgba(154,138,114,0.06)",
+      border: "1px solid rgba(154,138,114,0.15)",
       borderRadius: 8,
       padding: "12px 14px",
       marginBottom: 8
@@ -1262,9 +1267,9 @@ function RefinementRitual() {
       textAlign: "center",
       padding: "2rem",
       marginTop: "1rem",
-      background: "rgba(199,160,90,0.08)",
+      background: "rgba(180,150,48,0.08)",
       borderRadius: 10,
-      border: "1px solid rgba(199,160,90,0.2)"
+      border: "1px solid rgba(180,150,48,0.2)"
     }
   }, /*#__PURE__*/React.createElement("div", {
     style: {
@@ -1342,7 +1347,7 @@ function CopyBank({
   }), /*#__PURE__*/React.createElement("div", {
     style: {
       background: palette.warmWhite,
-      border: "1px solid rgba(14,61,61,0.08)",
+      border: "1px solid rgba(51,38,26,0.08)",
       borderRadius: 10,
       padding: "18px 20px",
       marginBottom: "1.5rem"
@@ -1358,8 +1363,8 @@ function CopyBank({
       fontFamily: font.body,
       fontSize: 14,
       color: palette.teal,
-      background: "rgba(14,61,61,0.02)",
-      border: "1px solid rgba(14,61,61,0.08)",
+      background: "rgba(51,38,26,0.02)",
+      border: "1px solid rgba(51,38,26,0.08)",
       borderRadius: 8,
       outline: "none",
       resize: "vertical",
@@ -1390,8 +1395,8 @@ function CopyBank({
       fontSize: 11,
       fontWeight: newTag === t.id ? 600 : 400,
       color: newTag === t.id ? palette.warmWhite : palette.teal,
-      background: newTag === t.id ? palette.teal : "rgba(14,61,61,0.05)",
-      border: `1px solid ${newTag === t.id ? palette.teal : "rgba(14,61,61,0.1)"}`,
+      background: newTag === t.id ? palette.teal : "rgba(51,38,26,0.05)",
+      border: `1px solid ${newTag === t.id ? palette.teal : "rgba(51,38,26,0.1)"}`,
       borderRadius: 4,
       cursor: "pointer",
       transition: "all 0.2s"
@@ -1408,7 +1413,7 @@ function CopyBank({
       letterSpacing: "0.06em",
       textTransform: "uppercase",
       color: newEntry.trim() ? palette.warmWhite : palette.sage,
-      background: newEntry.trim() ? `linear-gradient(135deg, ${palette.copper}, ${palette.gold})` : "rgba(125,143,131,0.15)",
+      background: newEntry.trim() ? `linear-gradient(135deg, ${palette.copper}, ${palette.gold})` : "rgba(154,138,114,0.15)",
       border: "none",
       borderRadius: 5,
       cursor: newEntry.trim() ? "pointer" : "default"
@@ -1428,8 +1433,8 @@ function CopyBank({
       fontSize: 11,
       fontWeight: filter === "all" ? 600 : 400,
       color: filter === "all" ? palette.copper : palette.sage,
-      background: filter === "all" ? "rgba(184,106,72,0.1)" : "transparent",
-      border: `1px solid ${filter === "all" ? "rgba(184,106,72,0.2)" : "transparent"}`,
+      background: filter === "all" ? "rgba(163,119,53,0.1)" : "transparent",
+      border: `1px solid ${filter === "all" ? "rgba(163,119,53,0.2)" : "transparent"}`,
       borderRadius: 4,
       cursor: "pointer"
     }
@@ -1445,8 +1450,8 @@ function CopyBank({
         fontSize: 11,
         fontWeight: filter === t.id ? 600 : 400,
         color: filter === t.id ? palette.copper : palette.sage,
-        background: filter === t.id ? "rgba(184,106,72,0.1)" : "transparent",
-        border: `1px solid ${filter === t.id ? "rgba(184,106,72,0.2)" : "transparent"}`,
+        background: filter === t.id ? "rgba(163,119,53,0.1)" : "transparent",
+        border: `1px solid ${filter === t.id ? "rgba(163,119,53,0.2)" : "transparent"}`,
         borderRadius: 4,
         cursor: "pointer"
       }
@@ -1473,7 +1478,7 @@ function CopyBank({
     key: entry.id,
     style: {
       background: palette.warmWhite,
-      border: "1px solid rgba(14,61,61,0.08)",
+      border: "1px solid rgba(51,38,26,0.08)",
       borderRadius: 10,
       padding: "14px 18px",
       marginBottom: 10
@@ -1503,7 +1508,7 @@ function CopyBank({
       textTransform: "uppercase",
       letterSpacing: "0.06em",
       color: palette.mauve,
-      background: "rgba(122,91,110,0.08)",
+      background: "rgba(142,106,94,0.08)",
       borderRadius: 3
     }
   }, entry.tag), entry.title && /*#__PURE__*/React.createElement("span", {
@@ -1517,7 +1522,7 @@ function CopyBank({
     style: {
       fontFamily: font.body,
       fontSize: 10,
-      color: "rgba(125,143,131,0.6)",
+      color: "rgba(154,138,114,0.6)",
       marginLeft: "auto"
     }
   }, entry.saved), /*#__PURE__*/React.createElement(CopyButton, {
@@ -1529,9 +1534,9 @@ function CopyBank({
       padding: "4px 8px",
       fontFamily: font.body,
       fontSize: 10,
-      color: "rgba(184,106,72,0.5)",
+      color: "rgba(163,119,53,0.5)",
       background: "transparent",
-      border: "1px solid rgba(184,106,72,0.15)",
+      border: "1px solid rgba(163,119,53,0.15)",
       borderRadius: 4,
       cursor: "pointer"
     }
@@ -1552,7 +1557,7 @@ function ArtifactFooter() {
     style: {
       marginTop: 44,
       padding: "24px 0 0",
-      borderTop: "1px solid rgba(14,61,61,0.16)",
+      borderTop: "1px solid rgba(51,38,26,0.16)",
       textAlign: "center",
       fontFamily: font.body,
       fontSize: 12,
@@ -1573,7 +1578,7 @@ function ArtifactFooter() {
     rel: "noopener noreferrer",
     style: linkStyle
   }, "Privacy Policy"), /*#__PURE__*/React.createElement("span", {
-    style: { color: "rgba(14,61,61,0.18)" }
+    style: { color: "rgba(51,38,26,0.18)" }
   }, "|"), /*#__PURE__*/React.createElement("a", {
     href: "https://www.sunnysink.com/terms-conditions",
     target: "_blank",
@@ -1583,6 +1588,78 @@ function ArtifactFooter() {
     href: "mailto:support@sunnysink.com",
     style: { color: palette.gold, textDecoration: "none" }
   }, "support@sunnysink.com")));
+}
+
+/* ═══════════════════════════════════════════
+   ATMOSPHERIC EFFECTS — SUNLIT ALTAR
+   ═══════════════════════════════════════════ */
+
+function FloatingEmbers() {
+  const canvasRef = useRef(null);
+  useEffect(() => {
+    const container = canvasRef.current;
+    if (!container) return;
+    const mq = window.matchMedia('(prefers-reduced-motion: reduce)');
+    if (mq.matches) return;
+    const spawn = () => {
+      const ember = document.createElement('div');
+      const size = 2 + Math.random() * 3;
+      const left = 10 + Math.random() * 80;
+      const dur = 3 + Math.random() * 4;
+      Object.assign(ember.style, {
+        position: 'absolute',
+        bottom: '0',
+        left: left + '%',
+        width: size + 'px',
+        height: size + 'px',
+        borderRadius: '50%',
+        background: '#D4A24A',
+        boxShadow: '0 0 6px 1px rgba(180,150,48,0.5)',
+        animation: `emberRise ${dur}s ease-out forwards`,
+        pointerEvents: 'none'
+      });
+      container.appendChild(ember);
+      setTimeout(() => ember.remove(), dur * 1000);
+    };
+    const interval = setInterval(spawn, 700);
+    return () => clearInterval(interval);
+  }, []);
+  return /*#__PURE__*/React.createElement("div", {
+    ref: canvasRef,
+    style: {
+      position: "fixed",
+      inset: 0,
+      pointerEvents: "none",
+      zIndex: 0,
+      overflow: "hidden"
+    }
+  });
+}
+
+function FloatingOrbs() {
+  const orbs = [
+    { w:260, h:260, color:'rgba(191,91,30,0.08)', dur:14, x:'15%', y:'10%' },
+    { w:220, h:220, color:'rgba(180,150,48,0.10)', dur:18, x:'75%', y:'20%' },
+    { w:240, h:240, color:'rgba(59,107,74,0.08)', dur:16, x:'65%', y:'75%' },
+    { w:160, h:160, color:'rgba(142,106,94,0.06)', dur:20, x:'10%', y:'80%' }
+  ];
+  return /*#__PURE__*/React.createElement("div", {
+    style: { position: "fixed", inset: 0, pointerEvents: "none", zIndex: 0, overflow: "hidden" }
+  }, orbs.map((o, i) => /*#__PURE__*/React.createElement("div", {
+    key: i,
+    style: {
+      position: "absolute",
+      left: o.x,
+      top: o.y,
+      width: o.w,
+      height: o.h,
+      borderRadius: "50%",
+      background: `radial-gradient(circle, ${o.color}, transparent 70%)`,
+      animation: `orbFloat ${o.dur}s ease-in-out infinite`,
+      animationDelay: `${i * -3}s`,
+      filter: "blur(40px)"
+    }
+  })));
 }
 
 /* ═══════════════════════════════════════════
@@ -1622,24 +1699,39 @@ function MethodToMessageGenerator() {
     }]);
   };
   return /*#__PURE__*/React.createElement(React.Fragment, null, /*#__PURE__*/React.createElement("link", {
-    href: "https://fonts.googleapis.com/css2?family=Cinzel+Decorative:wght@400;700&family=Playfair+Display:ital,wght@0,400;0,600;1,400&family=Montserrat:wght@400;500;600&display=swap",
+    href: "https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,400;0,500;0,600;0,700;1,400;1,500&family=Hanken+Grotesk:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap",
     rel: "stylesheet"
   }), /*#__PURE__*/React.createElement("style", null, `
         @keyframes fadeIn {
           from { opacity: 0; transform: translateY(8px); }
           to { opacity: 1; transform: translateY(0); }
         }
+        @keyframes shimmer {
+          0% { background-position: 200% center; }
+          100% { background-position: -200% center; }
+        }
+        @keyframes emberRise {
+          0% { transform: translateY(0) scale(1); opacity: 0; }
+          15% { opacity: 0.45; }
+          85% { opacity: 0.15; }
+          100% { transform: translateY(-120px) scale(0.3); opacity: 0; }
+        }
+        @keyframes orbFloat {
+          0%, 100% { transform: translate(0, 0) scale(1); }
+          33% { transform: translate(12px, -8px) scale(1.04); }
+          66% { transform: translate(-8px, 6px) scale(0.97); }
+        }
         * { box-sizing: border-box; margin: 0; padding: 0; }
         textarea:focus, input:focus { outline: none; }
-        ::placeholder { color: rgba(14,61,61,0.3); }
+        ::placeholder { color: rgba(51,38,26,0.35); }
         ::-webkit-scrollbar { width: 6px; }
         ::-webkit-scrollbar-track { background: transparent; }
-        ::-webkit-scrollbar-thumb { background: rgba(14,61,61,0.12); border-radius: 3px; }
+        ::-webkit-scrollbar-thumb { background: rgba(163,119,53,0.18); border-radius: 3px; }
       `), /*#__PURE__*/React.createElement("div", {
     style: pageStyle
   }, /*#__PURE__*/React.createElement("div", {
     style: overlayStyle
-  }), /*#__PURE__*/React.createElement("div", {
+  }), /*#__PURE__*/React.createElement(FloatingOrbs, null), /*#__PURE__*/React.createElement(FloatingEmbers, null), /*#__PURE__*/React.createElement("div", {
     style: containerStyle
   }, /*#__PURE__*/React.createElement("div", {
     style: {
@@ -1660,9 +1752,14 @@ function MethodToMessageGenerator() {
   }, "Method Alchemy Challenge"), /*#__PURE__*/React.createElement("h1", {
     style: {
       fontFamily: font.display,
-      fontSize: 24,
-      fontWeight: 400,
-      color: palette.teal,
+      fontSize: 28,
+      fontWeight: 600,
+      background: "linear-gradient(100deg, #8B6228 0%, #BF5B1E 35%, #B49630 60%, #8E6A5E 85%, #A37735 100%)",
+      backgroundSize: "200% auto",
+      WebkitBackgroundClip: "text",
+      WebkitTextFillColor: "transparent",
+      backgroundClip: "text",
+      animation: "shimmer 8s ease-in-out infinite alternate",
       letterSpacing: "0.03em",
       lineHeight: 1.3
     }
