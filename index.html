@@ -120,6 +120,62 @@ Generate 15 potential names for my signature method. For each name:
 - Mix styles: some mythic/poetic, some grounded/clear, some unexpected/bold
 
 After the list, pick your top 3 and explain in one sentence each why they work for my specific method. Then give me 3 "name formulas" I can riff on myself (e.g. "The [Symbol] + [Action]" or "[Adjective] [Container]").`
+  }, {
+    id: "sparkstatement",
+    title: "Spark Statement",
+    category: "Quick Win",
+    generate: (d, t) => `I need help writing my spark statement. This is the short, punchy line that makes someone lean in before I even get to the full explanation.
+
+Here's the formula:
+I work with [who] who are [before state]. Through my [Signature Method Name], they go from [struggle] to [result] so that they can [ultimate outcome].
+
+Here's my raw info:
+Who I work with: ${d.client}
+What they're going through when they find me: ${d.before}
+My signature method name: ${d.method || "[Signature Method Name]"}
+What they're doing/feeling because of their situation: ${d.before}
+What shifts for them: ${d.after}
+The bigger thing that becomes possible: ${d.shift}
+
+Rules for the output:
+- Keep it to 2 sentences max
+- ${d.method ? `Use my method name "${d.method}" exactly as a proper noun.` : `I don't have a method name yet, so use the placeholder [Signature Method Name] in brackets.`} Either way, do NOT describe my modalities or methodology. Never say "Through tarot and coaching" or "Using my blend of...". It's either the name or the bracket.
+- It should sound like something I'd say out loud at a coffee shop, not something I'd write on a website
+- No stacking more than 2 descriptors in a row
+- No jargon unless my actual clients would use it
+- Avoid the words: unlock, empower, step into, reclaim, sacred, align, journey
+- Give me 3 versions so I can pick the one that feels most like me
+- Each sentence should be short enough to say in one breath without rushing
+- Tone: ${t.adj}, ${t.feel}`
+  }, {
+    id: "transformationstatement",
+    title: "Transformation Statement",
+    category: "Quick Win",
+    generate: (d, t) => `I need help writing my transformation statement. This is the fuller version of what I do. It names the transformation my method creates and who it's for, in language that makes the right person say "that's exactly what I need."
+
+Here's what I know about my work:
+Who I help: ${d.client}
+What they're experiencing before they find me: ${d.before}
+What shifts for them after working with me: ${d.after}
+What my sessions feel like: ${d.experience}
+The core shift I create: ${d.shift}
+${d.method ? `My method name: ${d.method}` : "I don't have a method name yet."}
+
+Write 3 versions of my transformation statement. Each one should:
+- Be 2-4 sentences max
+- Lead with WHO I help and WHAT they're going through (not my credentials or modalities)
+- ${d.method ? `Name my method "${d.method}" naturally, as a proper noun` : "Use [Signature Method Name] as a placeholder"}
+- Describe the shift in sensory, specific language (not "gain clarity" or "feel empowered")
+- End with what becomes possible on the other side
+- Sound like something I'd say on a discovery call, not something I'd carve into a plaque
+- No stacking more than 2 descriptors in a row
+- Avoid the words: unlock, empower, step into, reclaim, sacred, align, journey, transformative
+- Tone: ${t.adj}, ${t.feel}
+
+After the 3 versions, tell me which one you'd recommend for:
+1. A spoken intro (networking, podcast, discovery call)
+2. A written bio or about page
+3. The opening line of a sales page`
   }]
 }, {
   id: "transformation",
